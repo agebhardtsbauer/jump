@@ -19,7 +19,7 @@ class OverlayWindow: NSWindow {
         // Create window in center of screen
         let screenRect = NSScreen.main?.frame ?? NSRect.zero
         let windowRect = NSRect(
-            x: (screenRect.width - windowWidth) / 2,
+            x: (screenRect.width/2) + 270,
             y: screenRect.height - 100,
             width: windowWidth,
             height: windowHeight

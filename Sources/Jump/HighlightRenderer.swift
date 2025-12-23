@@ -73,9 +73,9 @@ private class HighlightView: NSView {
         super.draw(dirtyRect)
 
         // Draw semi-transparent green rectangle
-        NSColor.green.withAlphaComponent(0.3).setFill()
+        // NSColor.green.withAlphaComponent(0.3).setFill()
         let path = NSBezierPath(rect: bounds)
-        path.fill()
+        // path.fill()
 
         // Draw green border
         NSColor.green.withAlphaComponent(0.8).setStroke()
