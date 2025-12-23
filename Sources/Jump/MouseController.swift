@@ -4,12 +4,13 @@ import AppKit
 /// Controls mouse cursor movement using CoreGraphics APIs
 class MouseController {
 
-    /// Move the mouse cursor to the specified point
-    /// - Parameter point: The screen coordinates to move to (origin: top-left)
-    func moveMouse(to point: CGPoint) {
-        // Convert to CoreGraphics coordinates (origin: bottom-left)
-        let screenHeight = NSScreen.main?.frame.height ?? 0
-        let cgPoint = CGPoint(x: point.x, y: screenHeight - point.y)
+    /// Move the mouse cursor to the specified point (in Accessibility coordinates)
+    /// - Parameter axPoint: The point in Accessibility coordinates (top-left origin)
+    func moveMouse(to axPoint: CGPoint) {
+        // Convert to CoreGraphics coordinates (bottom-left origin)
+        let cgPoint = CoordinateConverter.toAppKit(axPoint)
+
+        print("Moving mouse: AX(\(axPoint.x), \(axPoint.y)) -> CG(\(cgPoint.x), \(cgPoint.y))")
 
         // Create and post mouse move event
         if let moveEvent = CGEvent(mouseEventSource: nil,
@@ -20,14 +21,12 @@ class MouseController {
         }
     }
 
-    /// Move the mouse to the center of a given rectangle
-    /// - Parameter rect: The rectangle in screen coordinates
-    func moveMouse(toCenter rect: CGRect) {
-        let centerPoint = CGPoint(
-            x: rect.origin.x + rect.size.width / 2,
-            y: rect.origin.y + rect.size.height / 2
-        )
-        print("Moving mouse to element at: \(centerPoint) (from frame: \(rect))")
+    /// Move the mouse to the center of a given rectangle (in Accessibility coordinates)
+    /// - Parameter axFrame: The rectangle in Accessibility coordinates (top-left origin)
+    func moveMouse(toCenter axFrame: CGRect) {
+        // Calculate center point in Accessibility coordinates
+        let centerPoint = CoordinateConverter.centerPoint(of: axFrame)
+        print("Moving mouse to center of frame: \(axFrame)")
         moveMouse(to: centerPoint)
     }
 }

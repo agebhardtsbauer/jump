@@ -131,7 +131,8 @@ class OverlayWindow: NSWindow {
 // MARK: - NSWindowDelegate
 extension OverlayWindow: NSWindowDelegate {
     func windowDidResignKey(_ notification: Notification) {
-        // Auto-close when window loses focus
+        // Auto-close when window loses focus (user clicked elsewhere)
+        print("🔄 Window lost focus, auto-closing")
         overlayDelegate?.overlayWindowDidPressEscape(self)
     }
 }

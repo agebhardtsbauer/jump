@@ -36,30 +36,10 @@ class HighlightRenderer {
         highlightWindows.removeAll()
     }
 
-    /// Convert Accessibility coordinates (top-left origin) to AppKit coordinates (bottom-left origin)
-    private func convertToAppKitCoordinates(_ axFrame: CGRect) -> NSRect {
-        guard let screen = NSScreen.main else {
-            return axFrame
-        }
-
-        let screenHeight = screen.frame.height
-
-        // AX: y=0 is at top, AppKit: y=0 is at bottom
-        // Convert: AppKit_y = screenHeight - AX_y - height
-        let appKitY = screenHeight - axFrame.origin.y - axFrame.size.height
-
-        return NSRect(
-            x: axFrame.origin.x,
-            y: appKitY,
-            width: axFrame.size.width,
-            height: axFrame.size.height
-        )
-    }
-
     /// Create a single highlight window
     private func createHighlightWindow(frame: CGRect, label: Int) -> NSWindow {
-        // Convert from Accessibility coordinates (top-left origin) to AppKit coordinates (bottom-left origin)
-        let convertedFrame = convertToAppKitCoordinates(frame)
+        // Convert from Accessibility coordinates to AppKit coordinates
+        let convertedFrame = CoordinateConverter.toAppKit(frame)
 
         let window = NSWindow(
             contentRect: convertedFrame,
