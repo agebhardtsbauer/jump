@@ -71,6 +71,64 @@ class AppCoordinator {
             DispatchQueue.main.async {
                 self.allElements = elements
                 print("Found \(elements.count) accessible elements in \(appName)")
+
+                // If user already typed text before scan completed, trigger matching now
+                // Otherwise show default highlights if text is empty
+                let currentText = self.overlayWindow.currentText
+                if !currentText.isEmpty {
+                    print("⚡ Triggering deferred search for: '\(currentText)'")
+                    self.updateMatches(for: currentText)
+                } else {
+                    // Show default highlights
+                    self.showDefaultHighlights()
+                }
+            }
+        }
+    }
+
+    /// Show default highlights based on app configuration
+    private func showDefaultHighlights() {
+        guard let app = targetApp,
+              let bundleId = app.bundleIdentifier,
+              let config = AppFilters.config(for: bundleId),
+              let defaultConfig = config.defaultHighlights else {
+            // No default highlights configured
+            currentMatches = []
+            highlightRenderer.clearHighlights()
+            return
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+
+            // Apply default filter rules
+            var filtered = self.allElements
+            print("🎯 Applying default highlights for \(bundleId):")
+            for rule in defaultConfig.rules {
+                let before = filtered.count
+                filtered = rule.apply(to: filtered)
+                print("   → \(rule.description): \(before) -> \(filtered.count)")
+            }
+
+            // Apply limit if specified
+            if let limit = defaultConfig.limit {
+                filtered = Array(filtered.prefix(limit))
+                print("   → limit(\(limit)): \(filtered.count)")
+            }
+
+            // Convert to MatchedElement format (score 0 for defaults, use label as matched text)
+            let matches = filtered.map { element in
+                MatchedElement(
+                    element: element,
+                    score: 0,
+                    matchedText: element.label ?? element.description ?? element.title ?? "Default"
+                )
+            }
+
+            DispatchQueue.main.async {
+                self.currentMatches = matches
+                self.highlightRenderer.showHighlights(for: matches)
+                print("   ✓ Showing \(matches.count) default highlights")
             }
         }
     }
@@ -78,8 +136,8 @@ class AppCoordinator {
     /// Update matches based on current search text
     private func updateMatches(for text: String) {
         if text.isEmpty {
-            currentMatches = []
-            highlightRenderer.clearHighlights()
+            // Show default highlights if configured
+            showDefaultHighlights()
             return
         }
 
@@ -87,7 +145,14 @@ class AppCoordinator {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
 
-            let matches = self.matcher.match(query: text, in: self.allElements)
+            guard let app = targetApp else {
+                print("⚠ No target application")
+                return
+            }
+
+            let appName = app.localizedName ?? "Unknown"
+
+            let matches = self.matcher.match(query: text, appName: appName, in: self.allElements)
 
             DispatchQueue.main.async {
                 self.currentMatches = matches
@@ -99,7 +164,7 @@ class AppCoordinator {
 
     /// Handle element selection
     private func selectElement(at index: Int) {
-        guard index >= 0 && index < currentMatches.count else {
+        guard index >= 0, index < currentMatches.count else {
             print("⚠ Invalid selection index: \(index) (have \(currentMatches.count) matches)")
             return
         }
@@ -148,12 +213,13 @@ class AppCoordinator {
 }
 
 // MARK: - OverlayWindowDelegate
+
 extension AppCoordinator: OverlayWindowDelegate {
-    func overlayWindow(_ window: OverlayWindow, didUpdateText text: String) {
+    func overlayWindow(_: OverlayWindow, didUpdateText text: String) {
         updateMatches(for: text)
     }
 
-    func overlayWindowDidPressEnter(_ window: OverlayWindow, withText text: String) {
+    func overlayWindowDidPressEnter(_: OverlayWindow, withText text: String) {
         print("📥 Enter pressed with text: '\(text)', matches: \(currentMatches.count)")
         // If exactly one match, select it
         if currentMatches.count == 1 {
@@ -170,12 +236,12 @@ extension AppCoordinator: OverlayWindowDelegate {
         }
     }
 
-    func overlayWindowDidPressEscape(_ window: OverlayWindow) {
+    func overlayWindowDidPressEscape(_: OverlayWindow) {
         print("📥 Escape pressed, closing overlay")
         hideOverlay()
     }
 
-    func overlayWindowDidPressNumber(_ window: OverlayWindow, number: Int) {
+    func overlayWindowDidPressNumber(_: OverlayWindow, number: Int) {
         print("📥 Number \(number) pressed")
         // Numbers are 1-indexed, array is 0-indexed
         selectElement(at: number - 1)

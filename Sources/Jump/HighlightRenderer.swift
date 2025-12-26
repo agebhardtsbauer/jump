@@ -83,7 +83,7 @@ private class HighlightView: NSView {
         path.stroke()
 
         // Draw numeric label in top-left corner
-        let labelText = "[\(label)]"
+        let labelText = "\(label)"
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.boldSystemFont(ofSize: 16),
             .foregroundColor: NSColor.black,
@@ -94,22 +94,24 @@ private class HighlightView: NSView {
         let labelSize = attributedString.size()
 
         // Add padding around label
-        let padding: CGFloat = 4
+        // let padding: CGFloat = 4
         let labelRect = NSRect(
-            x: padding,
-            y: bounds.height - labelSize.height - padding,
-            width: labelSize.width + padding * 2,
-            height: labelSize.height + padding * 2
+            // x: padding,
+            x: 0,
+            // y: bounds.height - labelSize.height,
+            y: 0,
+            width: labelSize.width,
+            height: labelSize.height
         )
 
         // Draw background for label
         NSColor.green.withAlphaComponent(0.9).setFill()
-        NSBezierPath(roundedRect: labelRect, xRadius: 4, yRadius: 4).fill()
+        // NSBezierPath(roundedRect: labelRect, xRadius: 4, yRadius: 4).fill()
 
         // Draw label text
         attributedString.draw(at: NSPoint(
-            x: labelRect.origin.x + padding,
-            y: labelRect.origin.y + padding
+            x: labelRect.origin.x,
+            y: labelRect.origin.y,
         ))
     }
 }

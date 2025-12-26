@@ -9,13 +9,12 @@ struct MatchedElement {
 
 /// Performs substring matching on UI element labels
 class ElementMatcher {
-
     /// Match elements against a search query using substring matching
     /// - Parameters:
     ///   - query: The search text entered by user
     ///   - elements: List of accessible elements to search
     /// - Returns: Sorted list of matched elements (best matches first)
-    func match(query: String, in elements: [AccessibleElement]) -> [MatchedElement] {
+    func match(query: String, appName _: String, in elements: [AccessibleElement]) -> [MatchedElement] {
         guard !query.isEmpty else { return [] }
 
         let lowercaseQuery = query.lowercased()
@@ -44,12 +43,28 @@ class ElementMatcher {
         query: String,
         element: AccessibleElement
     ) -> (Int, String)? {
-        let candidates = [
-            element.label,
-            element.title,
-            element.value,
-            element.description
-        ].compactMap { $0 }
+        let candidates: [String]
+        let matcher: String
+        if query.starts(with: "t ") {
+            candidates = [
+                element.value,
+            ].compactMap { $0 }
+            matcher = String(query.dropFirst(2))
+        } else {
+            candidates = [
+                element.label,
+                element.title,
+                // element.value,
+                element.description,
+            ].compactMap { $0 }
+            matcher = query
+        }
+        // let candidates = [
+        //     element.label,
+        //     element.title,
+        //     element.value,
+        //     element.description
+        // ].compactMap { $0 }
 
         var bestScore: Int?
         var bestMatch: String?
@@ -58,9 +73,9 @@ class ElementMatcher {
             let lowercaseCandidate = candidate.lowercased()
 
             // Only match if query is a substring
-            if lowercaseCandidate.contains(query) {
+            if lowercaseCandidate.contains(matcher) {
                 let score = calculateSubstringScore(
-                    query: query,
+                    query: matcher,
                     in: lowercaseCandidate
                 )
                 if bestScore == nil || score < bestScore! {

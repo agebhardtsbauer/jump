@@ -5,19 +5,19 @@ import CoreGraphics
 /// - Accessibility API: Origin at top-left (y increases downward)
 /// - AppKit/CoreGraphics: Origin at bottom-left (y increases upward)
 enum CoordinateConverter {
-
     /// Find the screen that contains a given point
     /// - Parameter point: Point in screen coordinates (Accessibility coordinates)
     /// - Returns: The screen containing the point, or main screen if not found
     private static func screen(containing point: CGPoint) -> NSScreen {
-        print("📐 Finding screen for AX point: \(point)")
-        print("📐 Available screens:")
-        for (index, screen) in NSScreen.screens.enumerated() {
-            print("   Screen \(index): frame=\(screen.frame)")
+        // print("📐 Finding screen for AX point: \(point)")
+        // print("📐 Available screens:")
+        for (_, screen) in NSScreen.screens.enumerated() {
+            // print("   Screen \(index): frame=\(screen.frame)")
             // Note: screen.frame is in AppKit coordinates, but we need to check against AX coordinates
             // We need to check if the X coordinate matches and if the Y makes sense
             if screen.frame.minX <= point.x && point.x <= screen.frame.maxX {
-                print("   ✓ Screen \(index) contains X coordinate \(point.x)")
+                // print("   ✓ Screen \(index) contains X coordinate \(point.x)")
+                // print("Screen \(index)")
                 return screen
             }
         }
@@ -62,7 +62,7 @@ enum CoordinateConverter {
     static func toAppKit(_ axPoint: CGPoint) -> CGPoint {
         // CGEvent.mouseCursorPosition appears to use the same coordinate system as Accessibility
         // (both use top-left origin), so no Y conversion is needed
-        print("📐 Point conversion: AX(\(axPoint.x), \(axPoint.y)) -> CG(\(axPoint.x), \(axPoint.y)) [no Y flip]")
+        // print("📐 Point conversion: AX(\(axPoint.x), \(axPoint.y)) -> CG(\(axPoint.x), \(axPoint.y)) [no Y flip]")
         return axPoint
     }
 
